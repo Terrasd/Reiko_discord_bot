@@ -1,0 +1,8 @@
+build/
+dist/
+venv/
+memes/
+.env
+*.spec
+*.json
+*/__pycache__
