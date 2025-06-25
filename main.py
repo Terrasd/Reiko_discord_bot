@@ -7,9 +7,8 @@ from discord.ext import tasks, commands
 from dotenv import load_dotenv
 
 from functions.get_memes_reddit import get_random_meme_url
-from functions.words import bad_words
-from functions.message_handler import handle_message
 # from functions.nickname_animation import NicknameAnimator
+from functions.subreddits import LIST_SUBREDDITS
 
 
 load_dotenv()
@@ -41,52 +40,42 @@ async def on_ready():
 @client.event
 async def on_message(message: discord.Message):
     '''Обработка любых сообщений.'''
-    try:
-        await handle_message(client, message)
-    except Exception as e:
-        print(f'Произошла ошибка при обработке сообщения: {e}')
-
     if message.author == client.user:
         return
-
-    if client.user in message.mentions and any(
-            word in message.content.lower() for word in bad_words):
-        await message.reply('接辺掲玄転述込併士売載投後科前後南', mention_author=False)
-
-    if (isinstance(message.channel, discord.DMChannel) and message.author.id ==
-            int(os.getenv('TARGET_USER_ID'))):
-        target_channel = client.get_channel(int(os.getenv('CHANNEL_ID')))
-        if target_channel:
-            await target_channel.send(message.content)
-        else:
-            print(f'Не могу найти канал с ID {int(os.getenv('CHANNEL_ID'))}')
 
     await client.process_commands(message)
 
 
-@client.tree.command(name='meme', description='Отправить пост из сабреддита')
-@app_commands.describe(subreddit='Введите сабреддит')
-async def meme(interaction: discord.Interaction, subreddit: str):
+@client.tree.command(name='post', description='Отправить пост из сабреддита')
+@app_commands.describe(subreddit='Выберите сабреддит')
+async def post(interaction: discord.Interaction, subreddit: str):
     '''Команда для отправки случайного поста по указанному сабреддиту.'''
-    meme_title, meme_url, subred_name = await get_random_meme_url(subreddit)
+    meme_title, meme_url, subred_name, post_link = (
+        await get_random_meme_url(subreddit))
 
     if meme_url:
         embed = discord.Embed(
             title=meme_title,
-            url=meme_url,
             color=discord.Color.blue()
         )
         embed.set_image(url=meme_url)
-        embed.description = f'*From {subred_name}*'
+        embed.description = f'[Open on Reddit]({post_link})'
+        embed.set_footer(text=f'From r/{subred_name}')
 
         await interaction.response.send_message(embed=embed)
-        print(
-            f'Пост по команде "/meme" из <{subreddit}> отправлен: {meme_url}')
     else:
         await interaction.response.send_message(
             f'Не удалось получить пост из {subreddit},'
             f' прошу прощения ･ﾟ･(｡>ω<｡)･ﾟ･')
-        print(f'Ошибка при получении поста из {subreddit}.')
+
+
+@post.autocomplete('subreddit')
+async def subred_autocomplete(interaction: discord.Interaction, current: str):
+    matches = [s for s in LIST_SUBREDDITS if current.lower() in s.lower()]
+    return [
+        app_commands.Choice(name=s, value=s)
+        for s in matches[:25]
+    ]
 
 
 @tasks.loop(seconds=30)
@@ -96,19 +85,19 @@ async def send_random_meme():
     nowtime = str(datetime.datetime.now().time().strftime('%H.%M'))
     if nowtime == '00.00' and not has_sent_today:
         channel = client.get_channel(int(os.getenv('CHANNEL_ID')))
-        meme_title, meme_url, subred_name = await get_random_meme_url()
+        meme_title, meme_url, subred_name, post_link = (
+            await get_random_meme_url()
+        )
 
         if channel and meme_url:
             embed = discord.Embed(
                 title=meme_title,
-                url=meme_url,
                 color=discord.Color.green()
             )
-            embed.set_image(url=meme_url)
-            embed.description = f'*From {subred_name}*'
+            embed.description = f'[Open on Reddit]({post_link})'
+            embed.set_footer(text=f'From r/{subred_name}')
 
             await channel.send(embed=embed)
-            print(f'Случайный пост отправлен: {meme_url}')
         else:
             print('Не удалось отправить случайный пост')
 

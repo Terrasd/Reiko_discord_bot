@@ -72,6 +72,11 @@ async def get_random_meme_url(subreddit=None):
         if available_posts:
             post = random.choice(available_posts)
             save_to_file(post.url, subreddit)
-            return post.title, post.url, subreddit_obj.display_name
+            return (
+                post.title,
+                post.url,
+                subreddit_obj.display_name,
+                f'https://reddit.com{post.permalink}'
+            )
         else:
             return None, None
