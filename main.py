@@ -14,6 +14,7 @@ from functions.message_handler import handle_message
 
 load_dotenv()
 
+has_sent_today = False
 
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix='/', intents=intents)
@@ -91,8 +92,9 @@ async def meme(interaction: discord.Interaction, subreddit: str):
 @tasks.loop(seconds=30)
 async def send_random_meme():
     '''Задача для отправки случайного поста из случайного сабреддита.'''
-    nowtime = str(datetime.datetime.now().time().strftime('%H.%M.%S'))
-    if nowtime == '00.00.00':
+    global has_sent_today
+    nowtime = str(datetime.datetime.now().time().strftime('%H.%M'))
+    if nowtime == '00.00' and not has_sent_today:
         channel = client.get_channel(int(os.getenv('CHANNEL_ID')))
         meme_title, meme_url, subred_name = await get_random_meme_url()
 
@@ -109,6 +111,11 @@ async def send_random_meme():
             print(f'Случайный пост отправлен: {meme_url}')
         else:
             print('Не удалось отправить случайный пост')
+
+        has_sent_today = True
+
+    elif nowtime != '00.00' and has_sent_today:
+        has_sent_today = False
 
 
 if __name__ == '__main__':
