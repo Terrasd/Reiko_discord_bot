@@ -50,15 +50,15 @@ async def on_message(message: discord.Message):
 @app_commands.describe(subreddit='Выберите сабреддит')
 async def post(interaction: discord.Interaction, subreddit: str):
     '''Команда для отправки случайного поста по указанному сабреддиту.'''
-    meme_title, meme_url, subred_name, post_link = (
+    meme_title, image_url, subred_name, post_link = (
         await get_random_meme_url(subreddit))
 
-    if meme_url:
+    if image_url:
         embed = discord.Embed(
             title=meme_title,
             color=discord.Color.blue()
         )
-        embed.set_image(url=meme_url)
+        embed.set_image(url=image_url)
         embed.description = f'[Open on Reddit]({post_link})'
         embed.set_footer(text=f'From r/{subred_name}')
 
@@ -85,15 +85,16 @@ async def send_random_meme():
     nowtime = str(datetime.datetime.now().time().strftime('%H.%M'))
     if nowtime == '00.00' and not has_sent_today:
         channel = client.get_channel(int(os.getenv('CHANNEL_ID')))
-        meme_title, meme_url, subred_name, post_link = (
+        meme_title, image_url, subred_name, post_link = (
             await get_random_meme_url()
         )
 
-        if channel and meme_url:
+        if channel and image_url:
             embed = discord.Embed(
                 title=meme_title,
                 color=discord.Color.green()
             )
+            embed.set_image(image_url)
             embed.description = f'[Open on Reddit]({post_link})'
             embed.set_footer(text=f'From r/{subred_name}')
 

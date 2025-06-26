@@ -67,11 +67,11 @@ async def get_random_meme_url(subreddit=None):
                 top_posts.append(post)
 
         available_posts = [
-            post for post in top_posts if post.url not in sent_memes]
+            post for post in top_posts if post.permalink not in sent_memes]
 
         if available_posts:
             post = random.choice(available_posts)
-            save_to_file(post.url, subreddit)
+            save_to_file(post.permalink, subreddit)
             return (
                 post.title,
                 post.url,
