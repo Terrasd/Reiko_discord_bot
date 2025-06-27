@@ -94,7 +94,7 @@ async def send_random_meme():
                 title=meme_title,
                 color=discord.Color.green()
             )
-            embed.set_image(image_url)
+            embed.set_image(url=image_url)
             embed.description = f'[Open on Reddit]({post_link})'
             embed.set_footer(text=f'From r/{subred_name}')
 
